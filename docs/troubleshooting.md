@@ -208,19 +208,3 @@ export CARGO_BUILD_JOBS=1
 # 或者使用薄 LTO 减少内存
 export RUSTFLAGS="$RUSTFLAGS -C lto=thin"
 ```
-
-## VM 交叉编译
-
-### OHOS note 未嵌入二进制
-
-**原因**: OHOS note 对象文件未正确链接。
-
-**解决**: 确保 `ohos_note.o` 路径正确，并在 RUSTFLAGS 中使用 `-C link-arg=` 传递。验证：
-
-```bash
-readelf -n codewhale-tui | grep ohos
-```
-
-### VM 中无法执行生成的二进制
-
-**正常现象**: 二进制是为 aarch64 目标编译的，无法在 x86_64 VM 中直接运行。使用 `readelf` 验证类型即可。将二进制复制到 HarmonyOS 设备后执行。

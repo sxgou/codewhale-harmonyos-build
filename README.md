@@ -13,7 +13,7 @@ HarmonyOS 使用 **musl libc**，但其 SDK 中的 libc.so 是经过裁剪的版
 ### 前置条件
 
 - HarmonyOS 设备（ARM64）
-- [harmonybrew](https://github.com/Harmonybrew/homebrew-harmony)（Homebrew for HarmonyOS）
+- [harmonybrew](https://gitcode.com/Harmonybrew)（Homebrew for HarmonyOS）
 - Rust 1.95+（通过 brew 安装）
 - OHOS SDK 26+
 
@@ -83,10 +83,11 @@ readelf -l target/aarch64-unknown-linux-musl/release/codewhale-tui | grep interp
 
 ### 为什么选择 `aarch64-unknown-linux-musl` 而非 `aarch64-unknown-linux-ohos`？
 
-| 目标 | 优点 | 缺点 |
-|---|---|---|
-| `aarch64-unknown-linux-musl` | libc crate 定义完整，nix/mio 等依赖可编译 | Rust std lib 期望的 glibc 扩展符号需补齐 |
-| `aarch64-unknown-linux-ohos` | 原生 OHOS 支持 | libc crate 定义不完整，nix 0.25.1 等旧版库无法编译 |
+
+| 目标                         | 优点                                      | 缺点                                               |
+| ---------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| `aarch64-unknown-linux-musl` | libc crate 定义完整，nix/mio 等依赖可编译 | Rust std lib 期望的 glibc 扩展符号需补齐           |
+| `aarch64-unknown-linux-ohos` | 原生 OHOS 支持                            | libc crate 定义不完整，nix 0.25.1 等旧版库无法编译 |
 
 ### 核心组件
 
@@ -102,14 +103,16 @@ readelf -l target/aarch64-unknown-linux-musl/release/codewhale-tui | grep interp
 
 Rust 的 `aarch64-unknown-linux-musl` 标准库在编译时引用了两个在 OHOS SDK libc 中不存在的符号：
 
-| 符号 | 用途 | 补齐方案 |
-|---|---|---|
+
+| 符号                                   | 用途                             | 补齐方案                    |
+| -------------------------------------- | -------------------------------- | --------------------------- |
 | `posix_spawn_file_actions_addchdir_np` | 子进程设置工作目录（glibc 扩展） | 返回 ENOSYS（不影响主流程） |
-| `__xpg_strerror_r` | XSI 兼容的错误信息函数 | 直接转发到 `strerror_r` |
+| `__xpg_strerror_r`                     | XSI 兼容的错误信息函数           | 直接转发到`strerror_r`      |
 
 ### 关于 hmdfs
 
 HarmonyOS 的分布式文件系统 hmdfs 有以下限制：
+
 - **静态链接的 ELF 无法执行**（Permission denied），即使权限和 SELinux 上下文正确
 - **必须有 INTERP 段**（动态链接器路径），如 `/lib/ld-musl-aarch64.so.1`
 - **security.isolate xattr** 需要为 `\x03`（已存在于 `.harmonybrew/bin/` 中的文件）
@@ -122,23 +125,13 @@ HarmonyOS 的分布式文件系统 hmdfs 有以下限制：
 codewhale-harmonyos-build/
 ├── README.md                    # 本教程
 ├── scripts/
-│   ├── build-native.sh          # 原生 OHOS 构建脚本（自动化）
-│   └── build-vm.sh              # 备选：在 openEuler VM 中交叉编译
+│   └── build-native.sh          # 原生 OHOS 构建脚本（自动化）
 ├── patches/
 │   ├── ohos-clang-wrapper.sh    # Clang 目标转换 + 链接修复包装脚本
 │   └── ohos-libc-stubs.c        # Libc 缺失符号静态补齐库源码
 └── docs/
     └── troubleshooting.md       # 常见问题排查
 ```
-
-## 备选方案：VM 交叉编译
-
-如果你更倾向于在 x86_64 Linux 虚拟机中交叉编译，参见 `scripts/build-vm.sh`。该方案通过 openEuler VM + `loh` 工具与宿主机共享文件。
-
-关键区别：
-- VM 方案需要手动嵌入 OHOS note（`ohos_note.o`）
-- VM 方案的 musl target 标准库通过 rustup 安装
-- VM 方案同样需要 `-C target-feature=-crt-static`
 
 ## 相关资源
 

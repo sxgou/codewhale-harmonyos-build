@@ -15,7 +15,8 @@
 #   cargo build --target aarch64-unknown-linux-musl
 
 CLANG="/storage/Users/currentUser/.harmonybrew/Cellar/ohos-sdk/26.0.0.18/bin/clang"
-LLVM_LIB="/storage/Users/currentUser/.harmonybrew/Cellar/ohos-sdk/26.0.0.18/native/llvm/lib/clang/15.0.4/lib/aarch64-linux-ohos"
+CLANG_RT_LIB="/storage/Users/currentUser/.harmonybrew/Cellar/ohos-sdk/26.0.0.18/native/llvm/lib/clang/15.0.4/lib/aarch64-linux-ohos"
+UNWIND_LIB="/storage/Users/currentUser/.harmonybrew/Cellar/ohos-sdk/26.0.0.18/native/llvm/lib/aarch64-linux-ohos"
 STUBS_LIB="/storage/Users/currentUser"
 ARGS=""
 HAS_LINK_OUTPUT=0
@@ -26,7 +27,7 @@ for arg in "$@"; do
             ARGS="$ARGS --target=aarch64-linux-ohos"
             ;;
         -lgcc_s)
-            ARGS="$ARGS -L$LLVM_LIB -lclang_rt.builtins -lunwind"
+            ARGS="$ARGS -L$CLANG_RT_LIB -lclang_rt.builtins -L$UNWIND_LIB -lunwind"
             ;;
         -o)
             ARGS="$ARGS $arg"
